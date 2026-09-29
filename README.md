@@ -1,55 +1,75 @@
-# 口播提取器（VoiceCopyWeb）
+# 口播提取器 · 把视频里的话，变成能编辑的文字
 
-一个只在本机运行的网页工具，把视频或音频转换成可编辑的中文口播文字。它是为手机拍完视频后快速提取文案、减少手工听打而做的。
+**需要的是那段话的文字稿，不想再来回拖进度条、听一句打一句。**
 
-## 使用
+VoiceCopyWeb 在 Apple Silicon Mac 上运行，用本地 MLX Whisper 转写视频和音频。电脑打开网页就能用；手机与 Mac 在同一 Wi-Fi 下，也可以上传素材、看进度、复制结果。
 
-双击 `start.command`，或运行 `./start.sh`。电脑和手机连接同一 Wi‑Fi 后，在页面粘贴链接或上传文件。首次转写会下载本地 Whisper 模型。小红书、抖音等链接解析需要用户自行配置 AI Douyin API；直接上传本地文件不需要该服务。
+## 为什么做这个
 
-## 注意
+复盘一段口播、整理视频内容、继续修改文案，常常都从同一个步骤开始：先把声音里的话拿出来。手工听打耗时，手机里的素材传到电脑后再找软件处理，也容易让一个小任务变得麻烦。
 
-发布版不包含 `.access_token`、`data/`、`logs/`、虚拟环境或任何 API Key。语音内容可能包含个人信息，请只处理你有权处理的素材。API、模型和平台下载服务的费用与可用性由用户自行承担。问题和建议请通过 GitHub Issues 联系作者。
+这个工具把“上传或粘贴链接 → 转写 → 编辑 → 复制”放在同一个页面里。语音识别在自己的 Mac 上运行，得到一份可以继续工作的原始文字稿。
 
-配套 AI 工作流见 [`skills/voicecopy-transcription`](skills/voicecopy-transcription/SKILL.md)。
+## 适合怎样使用
 
-一个只在你的 Mac 上运行的私人网页工具：电脑和同一 Wi-Fi 下的手机都能粘贴视频链接或上传文件，使用 Apple Silicon 的 MLX Whisper 提取中文口播。
+- 自己录完一段视频，提取文字后检查重复、口头语和表达顺序。
+- 整理有权使用的音频或视频素材，保存一份可搜索的文字稿。
+- 手机上传文件，让同一网络里的 Mac 完成识别，手机端直接看结果。
 
-## 启动
+网页提供实时进度、结果编辑和一键复制。它不自动做字幕对齐、说话人区分、剪辑或发布；标题、摘要和改稿可以在转写后交给配套 Skill。
 
-双击 `start.command`，或在终端运行：
+## 第一次运行：先试本地文件
 
-```bash
-./start.sh
+当前实现面向 **Apple Silicon Mac**。需要 Python 3.10+、`ffmpeg`；从链接下载还需要 `yt-dlp`。首次使用需要联网安装依赖和下载模型。
+
+在仓库目录里手动创建环境，避免旧启动脚本绑定的特定 Python 安装路径：
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m app.main
 ```
 
-首次运行会安装 MLX Whisper，并在第一次转写时下载模型。终端会显示：
+请先确认 `ffmpeg` 已在系统 PATH 中。终端会显示电脑地址、局域网地址和访问口令；保持终端和 Mac 运行，在网页输入口令后上传一段短视频或音频。
 
-- 电脑访问地址
-- 手机访问地址
-- 手机访问口令
+转写完成后，检查姓名、数字和术语，在页面修改并复制。重新运行时可直接执行 `.venv/bin/python -m app.main`。完整操作例子见 [转写示例](examples/transcription.md)。
 
-手机必须和 Mac 连接同一个 Wi-Fi；Mac 必须保持开机且服务正在运行。
+## 视频链接与 API：哪些需要自己接
 
-## 后台常驻
+| 输入方式 | 需要什么 |
+|---|---|
+| 本地文件上传 | 本机 Whisper 模型和媒体处理依赖，不需要 AI Douyin API |
+| YouTube 等链接 | 系统 PATH 中的 `yt-dlp`、`ffmpeg`，以及目标站点允许的访问 |
+| 小红书、抖音、B站链接 | 尝试 AI Douyin 解析；失败后尝试 `yt-dlp`，平台限制可能导致两种方式都失败 |
 
-双击 `install-service.command` 可将工具安装为 macOS 用户后台服务。安装后：
+**仓库不提供任何作者的 API Key 或解析额度。** 平台解析调用和费用由使用者自行配置、承担。
 
-- 登录 Mac 时自动启动
-- 终端窗口可以关闭
-- 进程异常退出后会自动重启
-- 日志保存在 `~/Library/Application Support/VoiceCopyWeb/logs/`
+当前 `app/config.py` 仍从 `~/.codex/skills/video-to-subtitle-summary/.env` 读取链接解析配置。若要使用该功能，需在该文件里配置自己的 `AI_DOUYIN_API_KEY` 和可选的 `AI_DOUYIN_API_BASE`。这仍是一个依赖本地技能路径的实现，尚未改成通用安装配置。项目根目录的 `.env` 不会被当前代码自动读取。
 
-如需取消常驻，双击 `uninstall-service.command`。
+端口、模型等设置从进程环境读取，例如：
 
-## 支持
+```sh
+VCW_HOST=127.0.0.1 VCW_PORT=8765 .venv/bin/python -m app.main
+```
 
-- 小红书、抖音、B站：复用 `video-to-subtitle-summary` 已有的 AI Douyin 配置
-- YouTube 和其他 `yt-dlp` 支持的链接
-- 本地视频与音频上传
-- 电脑/手机响应式页面
-- SSE 实时进度
-- 一键复制、结果可继续编辑
+以上只允许本机访问；需要手机访问时使用局域网监听地址，并保管好访问口令。
 
-## 隐私
+## 当前限制和隐私
 
-语音识别在本机运行。短视频平台链接可能需要调用已有的 AI Douyin 服务解析下载地址；直接上传本地文件不会调用该解析服务。
+- 直接上传文件的语音识别在本机运行；首次模型下载需要联网。
+- 使用平台链接时，会联系目标平台、下载服务或配置的第三方解析接口。
+- 工作目录 `data/` 会保存处理文件和结果；`.access_token` 是本地访问口令，不是模型 API Key。它们不应提交到仓库。
+- 默认服务监听 `0.0.0.0`，会向可访问该 Mac 的网络设备提供入口；请在可信网络使用，不要直接暴露到公网。
+- 转写可能漏词或误识别，文字稿需要人工校对。
+- **公开版缺少后台服务所需的 plist 模板，`install-service.command` 目前不能直接作为通用安装方式。** 请先以前台运行方式使用。`start.sh` 也仍保留特定 Python 路径；上面的手动启动步骤不依赖该路径。
+
+## 配套 AI Skill
+
+[`skills/voicecopy-transcription/SKILL.md`](skills/voicecopy-transcription/SKILL.md) 指导 AI 把转写结果整理成“原文、去口头语版、标题或要点”。保留原文后再改写，便于核对。
+
+Skill 与转写网页没有自动连接。把需要整理的文字交给自己的 AI 助手时，才会使用该助手的模型与数据处理方式；如内容敏感，先确认是否适合发送。
+
+## 作者与反馈
+
+作者：[shane-lin67](https://github.com/shane-lin67)。请到 [Issues](https://github.com/shane-lin67/voicecopyweb/issues) 描述系统、输入方式和报错，避免附访问口令、API Key 或私人素材。仓库尚未添加统一开源许可证。
