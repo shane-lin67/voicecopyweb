@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3eee6" />
+  <title>口播提取器</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="workspace" aria-label="提取口播文案">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="link" type="button">粘贴链接</button>
+        <button class="tab" data-tab="file" type="button">上传文件</button>
+      </div>
+
+      <form id="job-form">
+        <div id="link-panel" class="panel active">
+          <label for="url">视频分享链接</label>
+          <textarea id="url" name="url" rows="4" placeholder="粘贴小红书、抖音、YouTube、B站链接……"></textarea>
+        </div>
+        <div id="file-panel" class="panel">
+          <label class="drop-zone" for="file">
+            <span class="drop-icon">＋</span>
+            <strong>选择视频或音频</strong>
+            <small>MP4、MOV、MP3、M4A 等，最大 500MB</small>
+          </label>
+          <input id="file" name="file" type="file" accept="video/*,audio/*" hidden />
+          <div id="file-name" class="file-name"></div>
+        </div>
+        <button id="submit" class="primary" type="submit"><span>开始提取</span><b>↗</b></button>
+      </form>
+
+      <div id="progress-card" class="progress-card" hidden>
+        <div class="progress-meta"><span id="stage">准备中</span><strong id="percent">0%</strong></div>
+        <div class="track"><div id="bar"></div></div>
+        <p>第一次使用会下载语音模型，之后会明显更快。</p>
+      </div>
+
+      <div id="error" class="error" hidden></div>
+    </section>
+
+    <section id="result-card" class="result-card" hidden>
+      <div class="result-heading">
+        <div><span>TRANSCRIPT</span><h2>整理后的口播文案</h2></div>
+        <button id="copy" class="copy" type="button">复制全文</button>
+      </div>
+      <textarea id="result" spellcheck="false"></textarea>
+    </section>
+
+    <footer><span>MLX WHISPER</span><span>本地处理 · 不上传转写平台</span></footer>
+  </main>
+
+  <dialog id="token-dialog">
+    <form method="dialog" id="token-form">
+      <h2>连接你的 Mac</h2>
+      <p>请输入 Mac 启动窗口显示的访问口令。只需输入一次。</p>
+      <input id="token-input" autocomplete="one-time-code" placeholder="访问口令" />
+      <button class="primary" value="confirm">保存并继续</button>
+    </form>
+  </dialog>
+  <script src="/static/app.js"></script>
+</body>
+</html>
